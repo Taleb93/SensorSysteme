@@ -1,0 +1,7 @@
+# PlatformIO build files
+.pio/
+.vscode/
+
+# Temporary or backup files
+*.tmp
+*.log
