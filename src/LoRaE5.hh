@@ -20,4 +20,5 @@ public:
     void sendTestMessage();
     void readAndSendTemperature();
     void readAndSendTemperatureWithDistance(float distance);
+    void control_ledLink(uint32_t sendLed,uint32_t busyLed,uint32_t faildLed);
 };

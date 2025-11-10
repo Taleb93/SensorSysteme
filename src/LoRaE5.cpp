@@ -159,3 +159,27 @@ void LoRaE5::readAndSendTemperatureWithDistance(float distance) {
         Serial.println("⚠️ Keine gültige Temperaturantwort erhalten!");
     }
 }
+void LoRaE5::control_ledLink(uint32_t sendLed,uint32_t busyLed,uint32_t faildLed){
+ if(this->Done)
+    {
+        digitalWrite(faildLed,LOW);
+        digitalWrite(busyLed,LOW);
+        digitalWrite(sendLed,HIGH);
+        delay(200);
+        digitalWrite(sendLed,LOW);
+    }
+    else if(this->busy){
+        digitalWrite(faildLed,LOW);
+        digitalWrite(sendLed,LOW);
+        digitalWrite(busyLed,HIGH);
+        delay(200);
+        digitalWrite(busyLed,LOW);
+    }
+    else{
+         digitalWrite(busyLed,LOW);
+         digitalWrite(sendLed,LOW);
+         digitalWrite(faildLed,HIGH);
+         delay(200);
+         digitalWrite(faildLed,LOW);
+         }
+}
