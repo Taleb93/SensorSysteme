@@ -6,7 +6,6 @@ HardwareSerial LoRaSerial(USART3);
 LoRaE5 sensor(LoRaSerial);
 const int trigPin = 9;
 const int echoPin = 10;
-
 float  distance;
 void setup() {
      Abstand_Sensor.sensorInit(10,9);
@@ -15,8 +14,7 @@ void setup() {
      sensor.joinNetwork();
      pinMode(D6,OUTPUT);
      pinMode(D7,OUTPUT);
-     pinMode(D8,OUTPUT);
-     
+     pinMode(D8,OUTPUT);   
 }
 
 void loop() {
