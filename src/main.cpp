@@ -21,7 +21,6 @@ void setup() {
 }
 
 void loop() {
- 
     distance = Abstand_Sensor.getDistance(100);
     static unsigned long lastSend = 0;
     unsigned long now = millis();
