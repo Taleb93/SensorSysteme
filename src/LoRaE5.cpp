@@ -75,8 +75,8 @@ void LoRaE5::readAndSendTemperature() {
         String tempStr = resp.substring(idx + 1);
         tempStr.trim();
         float tempC = tempStr.toFloat();
-
-        Serial.print("🌡️ Gelesene Temperatur: ");
+//commit
+        Serial.print("Gelesene Temperatur: ");
         Serial.println(tempC);
 
         String sendCmd = String("AT+MSG=\"TEMP:") + String(tempC, 1) +"\"";
