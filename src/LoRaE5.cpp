@@ -104,7 +104,7 @@ void LoRaE5::readAndSendTemperature() {
 
         delay(5000); // 5 Sekunden warten, damit das Modem sich erholt
     } else {
-        Serial.println("⚠️ Keine gültige Temperaturantwort erhalten!");
+        Serial.println("Keine gültige Temperaturantwort erhalten!");
     }
 }
 void LoRaE5::readAndSendTemperatureWithDistance(float distance) {
@@ -119,16 +119,16 @@ void LoRaE5::readAndSendTemperatureWithDistance(float distance) {
         tempStr.trim();
         float tempC = tempStr.toFloat();
 
-        Serial.print("🌡️ Gelesene Temperatur: ");
+        Serial.print(" Gelesene Temperatur: ");
         Serial.println(tempC, 1);
-        Serial.print("📏 Aktueller Abstand: ");
+        Serial.print("Aktueller Abstand: ");
         Serial.println(distance, 1);
 
         // Nachricht kombinieren → TEMP + DISTANCE
         String message = "TEMP:" + String(tempC, 1) + "C | DIST:" + String(distance, 1) + "cm";
         String sendCmd = "AT+MSG=\"" + message + +"\"";
 
-        Serial.print("📤 Sende an TTN: ");
+        Serial.print("Sende an TTN: ");
         Serial.println(sendCmd);
 
         // Befehl senden

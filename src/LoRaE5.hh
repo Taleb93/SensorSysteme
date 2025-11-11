@@ -5,11 +5,8 @@ class LoRaE5 {
 private:
     HardwareSerial &serial;  // Referenz auf den HardwareSerial-Port
     bool joined;
-  
-
     void clearBuffer();
     String sendCommand(const String &cmd, unsigned long timeout = 5000);
-
 public:
     bool Done;
     bool busy;

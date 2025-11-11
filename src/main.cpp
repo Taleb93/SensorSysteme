@@ -19,7 +19,7 @@ void setup() {
      pinMode(busyPin,OUTPUT);
      pinMode(falidPin,OUTPUT);   
 }
-
+//amend
 void loop() {
     distance = Abstand_Sensor.getDistance(100);
     static unsigned long lastSend = 0;
