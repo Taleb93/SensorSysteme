@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "TWK_Board",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cmath": "cpp"
+		}
+	}
+}

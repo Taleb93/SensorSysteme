@@ -1,12 +1,13 @@
 #include <Arduino.h>
 #include "CurrentSensor.hh"
 
+// 👉 Hier nur den ADC-Pin angeben:
 #define CURRENT_SENSOR_PIN A0
 
 CurrentSensor sensor;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   sensor.begin(CURRENT_SENSOR_PIN);
 
   Serial.println("== Stromsensor-Test (Nucleo-F303RE) ==");
@@ -19,5 +20,6 @@ void loop() {
   Serial.print("Gemessener RMS-Strom: ");
   Serial.print(rms, 3);
   Serial.println(" A");
+
   delay(2000);
 }
