@@ -16,9 +16,7 @@ public:
 
     void begin(int pin, float offset = 1.65, float vref = 3.3, int adcRes = 1023);
     float measureRMS();                  // RMS-Strom berechnen
-    float readCurrentOnce();             // Einzelmessung (A)
     float readVoltageOnce();
     void recordSamples_VC();
-    void recordSamples();                // Messreihe für Plot
    
 };

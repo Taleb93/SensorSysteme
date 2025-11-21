@@ -6,7 +6,7 @@
 CurrentSensor::CurrentSensor() {
     samples = DEFAULT_SAMPLES;
     sampleDelay = DEFAULT_DELAY_US;
-    sensitivity = 0.4; // durch Spannungsteiler halbiert (0.4 V/A → 0.2 V/A)
+    sensitivity = 0.4;
 
 }
 
@@ -23,12 +23,6 @@ float CurrentSensor::readVoltageOnce() {
     int raw = analogRead(sensorPin);
     float voltage = (raw / (float)adcResolution) * vRef;
     return voltage;
-}
-float CurrentSensor::readCurrentOnce() {
-    int raw = analogRead(sensorPin);
-    float voltage = (raw / (float)adcResolution) * vRef;
-    float current = (voltage - offsetVoltage) / sensitivity;
-    return current;
 }
 void CurrentSensor::recordSamples_VC() {
   static unsigned long t_buf[DEFAULT_SAMPLES];
@@ -64,25 +58,6 @@ void CurrentSensor::recordSamples_VC() {
         Serial.print(v_buf[i], 4);
         Serial.print("\t");
         Serial.println(c_buf[i], 4);
-    }
-}
-
-
-
-// Messreihe: Zeit- und Stromwerte ausgeben (für MATLAB)
-void CurrentSensor::recordSamples() {
-    float current[samples];
-    unsigned long timeStamp[samples];
-
-    Serial.println("Zeit (us)\tStrom (A)");
-
-    for (unsigned int i = 0; i < samples; i++) {
-        timeStamp[i] = micros();
-        current[i] = readCurrentOnce();
-        Serial.print(timeStamp[i]);
-        Serial.print("\t");
-        Serial.println(current[i], 3);
-        delayMicroseconds(sampleDelay);
     }
 }
 
