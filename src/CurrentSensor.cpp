@@ -7,7 +7,6 @@ CurrentSensor::CurrentSensor() {
     samples = DEFAULT_SAMPLES;
     sampleDelay = DEFAULT_DELAY_US;
     sensitivity = 0.4;
-
 }
 
 void CurrentSensor::begin(int pin, float offset, float vref, int adcRes) {
