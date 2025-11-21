@@ -59,15 +59,3 @@ void CurrentSensor::recordSamples_VC() {
         Serial.println(c_buf[i], 4);
     }
 }
-
-// RMS-Berechnung
-float CurrentSensor::measureRMS() {
-    float sumSq = 0.0;
-    for (unsigned int i = 0; i < samples; i++) {
-        float c = readCurrentOnce();
-        sumSq += c * c;
-        delayMicroseconds(sampleDelay);
-    }
-    float rms = sqrt(sumSq / samples);
-    return rms;
-}

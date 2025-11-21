@@ -15,7 +15,6 @@ public:
     CurrentSensor();
 
     void begin(int pin, float offset = 1.65, float vref = 3.3, int adcRes = 1023);
-    float measureRMS();                  // RMS-Strom berechnen
     float readVoltageOnce();
     void recordSamples_VC();
    
