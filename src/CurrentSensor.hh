@@ -20,4 +20,5 @@ public:
     float readVoltageOnce();
     void recordSamples_VC();
     void recordSamples();                // Messreihe für Plot
+   
 };

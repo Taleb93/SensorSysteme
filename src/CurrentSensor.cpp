@@ -30,14 +30,21 @@ float CurrentSensor::readCurrentOnce() {
     float current = (voltage - offsetVoltage) / sensitivity;
     return current;
 }
-// Messreihe: Zeit, Spannung & Strom ausgeben (für MATLAB oder Python)
 void CurrentSensor::recordSamples_VC() {
+  static unsigned long t_buf[DEFAULT_SAMPLES];
+    static float v_buf[DEFAULT_SAMPLES];
+    static float c_buf[DEFAULT_SAMPLES];
 
-    static unsigned long t_buf[240];
-    static float v_buf[240];
-    static float c_buf[240];
+    const unsigned long Ts_us = sampleDelay; // gewünschte Periode
+
+    unsigned long next_t = micros();  // Startzeit
 
     for (unsigned int i = 0; i < samples; i++) {
+
+        // Warte bis zum geplanten Zeitpunkt
+        while ((long)(micros() - next_t) < 0) {
+            // busy-wait
+        }
 
         unsigned long t = micros();
         float v = readVoltageOnce();
@@ -47,10 +54,9 @@ void CurrentSensor::recordSamples_VC() {
         v_buf[i] = v;
         c_buf[i] = c;
 
-        delayMicroseconds(sampleDelay);
+        next_t += Ts_us;  // nächstes Sample planen
     }
 
-    // Ausgabe NACH der Messung (egal wie langsam)
     Serial.println("Zeit (us)\tSpannung (V)\tStrom (A)");
     for (unsigned int i = 0; i < samples; i++) {
         Serial.print(t_buf[i]);
@@ -60,7 +66,6 @@ void CurrentSensor::recordSamples_VC() {
         Serial.println(c_buf[i], 4);
     }
 }
-
 
 
 

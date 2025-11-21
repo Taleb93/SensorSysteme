@@ -22,6 +22,6 @@ void loop() {
   // Serial.print("Gemessener Spannug: ");
   // Serial.print(vol, 3);
   // Serial.println(" V");
-  sensor.recordSamples_VC();
+  sensor.recordSamples_VC_raw();
   delay(2000);
 }
