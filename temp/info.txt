@@ -1,0 +1,7 @@
+
+Vintilator
+RMS Stufe 1 =  0.105 A ; P= 0.105 . 220; = 23.1 W
+RMS Stufe 2 = 0.112 A ;P= 0.112 . 220; 24,6W
+RMS Stufe 3 = 0.123 A ; P= 0.123 . 220; 27,06W
+
+Leistung 30 W

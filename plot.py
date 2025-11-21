@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # === 1️⃣ Daten einlesen ===
 # Datei enthält: time_us, voltage_V, current_A (Tab-getrennt)
-df = pd.read_csv("data.txt", sep=r"\s+", header=None,
+df = pd.read_csv("dataVint_stuf1.txt", sep=r"\s+", header=None,
                  names=["time_us", "voltage_V", "current_A"])
 
 # Mikrosekunden → Sekunden

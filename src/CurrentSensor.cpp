@@ -6,7 +6,7 @@
 CurrentSensor::CurrentSensor() {
     samples = DEFAULT_SAMPLES;
     sampleDelay = DEFAULT_DELAY_US;
-    sensitivity = 0.2; // durch Spannungsteiler halbiert (0.4 V/A → 0.2 V/A)
+    sensitivity = 0.4; // durch Spannungsteiler halbiert (0.4 V/A → 0.2 V/A)
 
 }
 
@@ -32,22 +32,36 @@ float CurrentSensor::readCurrentOnce() {
 }
 // Messreihe: Zeit, Spannung & Strom ausgeben (für MATLAB oder Python)
 void CurrentSensor::recordSamples_VC() {
-    Serial.println("Zeit (us)\tSpannung (V)\tStrom (A)");
+
+    static unsigned long t_buf[240];
+    static float v_buf[240];
+    static float c_buf[240];
 
     for (unsigned int i = 0; i < samples; i++) {
+
         unsigned long t = micros();
         float v = readVoltageOnce();
         float c = (v - offsetVoltage) / sensitivity;
 
-        Serial.print(t);
-        Serial.print("\t");
-        Serial.print(v, 4);
-        Serial.print("\t");
-        Serial.println(c, 4);
+        t_buf[i] = t;
+        v_buf[i] = v;
+        c_buf[i] = c;
 
         delayMicroseconds(sampleDelay);
     }
+
+    // Ausgabe NACH der Messung (egal wie langsam)
+    Serial.println("Zeit (us)\tSpannung (V)\tStrom (A)");
+    for (unsigned int i = 0; i < samples; i++) {
+        Serial.print(t_buf[i]);
+        Serial.print("\t");
+        Serial.print(v_buf[i], 4);
+        Serial.print("\t");
+        Serial.println(c_buf[i], 4);
+    }
 }
+
+
 
 
 // Messreihe: Zeit- und Stromwerte ausgeben (für MATLAB)
