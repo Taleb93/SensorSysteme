@@ -23,5 +23,5 @@ void loop() {
   // Serial.print(vol, 3);
   // Serial.println(" V");
   sensor.recordSamples_VC();
-  delay(2000);
+
 }

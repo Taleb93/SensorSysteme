@@ -49,8 +49,6 @@ void CurrentSensor::recordSamples_VC() {
 
         next_t += Ts_us;  // nächstes Sample planen
     }
-
-    Serial.println("Zeit (us)\tSpannung (V)\tStrom (A)");
     for (unsigned int i = 0; i < samples; i++) {
         Serial.print(t_buf[i]);
         Serial.print("\t");
