@@ -17,5 +17,6 @@ public:
     void begin(int pin, float offset = 1.65, float vref = 3.3, int adcRes = 1023);
     float readVoltageOnce();
     void recordSamples_VC();
+    int measurePredictPause(uint32_t measure_ms, uint32_t pause_ms);
    
 };
