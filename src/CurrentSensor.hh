@@ -18,5 +18,6 @@ public:
     float readVoltageOnce();
     void recordSamples_VC();
     int measurePredictPause(uint32_t measure_ms, uint32_t pause_ms);
+    void captureAndPrintOneWindow20ms();
    
 };

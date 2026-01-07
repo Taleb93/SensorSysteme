@@ -3,12 +3,16 @@
 #include "device_model_data.h"
 
 #include "CurrentSensor.hh"
+#include "LoRaE5.hh"
 #include "norm_params.hh"
 
 // ===== Modellparameter =====
 #define NUMBER_OF_INPUTS   7
 #define NUMBER_OF_OUTPUTS  3
 #define TENSOR_ARENA_SIZE  8192
+
+HardwareSerial LoRaSerial(USART3);
+LoRaE5 sensor(LoRaSerial);
 
 Eloquent::TinyML::TfLite<
   NUMBER_OF_INPUTS,
@@ -17,9 +21,9 @@ Eloquent::TinyML::TfLite<
 > ml;
 
 const char* LABELS[NUMBER_OF_OUTPUTS] = {
-  "loetstation",
-  "netzteil1",
-  "ventilator"
+  "Lötstation",
+  "Laptopnetzteil",
+  "Ventilator"
 };
 
 int argmax(const float* v, int n) {
@@ -42,8 +46,11 @@ CurrentSensor cs;
 
 void setup() {
   Serial.begin(9600);
-  delay(1500);
-
+ 
+  sensor.begin(9600);
+  sensor.joinNetwork();
+    
+ delay(1500);
   Serial.println();
   Serial.println("=== TinyML Device Classifier (LIVE) ===");
   Serial.print("Model size (bytes): ");
@@ -64,6 +71,7 @@ void setup() {
 
 void loop() {
   // 2s messen -> 1 Ergebnis -> 3s Pause -> wiederholen
+  sensor.readAndSendTemperature();
  int pred = cs.measurePredictPause(2000, 3000);
   Serial.print("✅ Predicted device: ");
   Serial.println(LABELS[pred]);
