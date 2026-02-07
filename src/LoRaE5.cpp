@@ -183,3 +183,56 @@ void LoRaE5::control_ledLink(uint32_t sendLed,uint32_t busyLed,uint32_t faildLed
          digitalWrite(faildLed,LOW);
          }
 }
+
+void LoRaE5::SendDetectedDevice(String Device) {
+    // Temperatur aus dem Modul lesen
+    String resp = sendCommand("AT+TEMP", 2000);
+    Serial.print("Antwort auf AT+TEMP → ");
+    Serial.println(resp);
+
+    int idx = resp.indexOf(":");
+    if (idx > 0) {
+        String tempStr = resp.substring(idx + 1);
+        tempStr.trim();
+        float tempC = tempStr.toFloat();
+
+        Serial.print("🌡️ Gelesene Temperatur: ");
+        Serial.println(tempC, 1);
+        Serial.print("📏 Zum Server wird erkannt: ");
+        Serial.println(Device);
+
+        // Nachricht kombinieren → TEMP + DISTANCE
+        String message = "Das erkannte Gerät ist :" + Device;
+        String sendCmd = "AT+MSG=\"" + message + +"\"";
+
+        Serial.print("📤 Sende an TTN: ");
+        Serial.println(sendCmd);
+
+        // Befehl senden
+        String sendResp = sendCommand(sendCmd, 10000);
+        Serial.print("LoRa → ");
+        Serial.println(sendResp);
+
+        // Ergebnis auswerten
+        if (sendResp.indexOf("Done") != -1) {
+            Serial.println("✅ Nachricht erfolgreich gesendet!");
+            this->Done = true;
+            this->busy = false;
+        } 
+        else if (sendResp.indexOf("busy") != -1) {
+            Serial.println("⚠️ Modem war beschäftigt, später erneut senden!");
+            this->Done = false;
+            this->busy = true;
+        } 
+        else {
+            Serial.println("⚠️ Nachricht wurde nicht bestätigt!");
+            this->Done = false;
+            this->busy = false;
+        }
+
+        delay(5000);  // kleine Pause zwischen den Sendevorgängen
+    } 
+    else {
+        Serial.println("⚠️ Keine gültige Temperaturantwort erhalten!");
+    }
+}
