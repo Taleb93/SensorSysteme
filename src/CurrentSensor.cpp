@@ -6,7 +6,7 @@ extern int predictClass(float *x);
  
 #define DEFAULT_SAMPLES 240
 #define DEFAULT_DELAY_US 333 // ≈ 3 kHz Abtastrate
-static const int NUM_CLASSES = 3;
+static const int NUM_CLASSES = 4;
 CurrentSensor::CurrentSensor() {
     samples = DEFAULT_SAMPLES;
     sampleDelay = DEFAULT_DELAY_US;
@@ -61,6 +61,79 @@ void CurrentSensor::recordSamples_VC() {
         Serial.println(c_buf[i], 4);
     }
 }
+void CurrentSensor::recordFeatureVectors_4s_20vec() {
+
+  const unsigned long Ts_us = sampleDelay;
+  unsigned long next_t = micros();
+
+  FeatureExtractor20ms fx;
+  fx.begin(Ts_us);
+
+  // 4s / 20ms = 200 Fenster
+  // 200 Fenster / 20 Vektoren = 10 Fenster pro Vektor
+  const int windowsPerVector = 10;
+  const int outVectors = 20;
+  const int featN = 7;
+
+  float vec[outVectors][featN];
+  for (int v = 0; v < outVectors; v++)
+    for (int i = 0; i < featN; i++)
+      vec[v][i] = 0.0f;
+
+  int currentVec = 0;
+  int winInVec = 0;
+
+  unsigned long t_end = micros() + 4000UL * 1000UL;
+
+  while ((long)(micros() - t_end) < 0 && currentVec < outVectors) {
+
+    while ((long)(micros() - next_t) < 0) {}
+    next_t += Ts_us;
+
+    float v = readVoltageOnce();
+    float c = (v - offsetVoltage) / sensitivity;
+
+    fx.addSample(c);
+
+    if (fx.windowReady()) {
+      float feats[featN];
+      if (fx.computeFeatures(feats)) {
+
+        // Features aufsummieren
+        for (int i = 0; i < featN; i++) {
+          vec[currentVec][i] += feats[i];
+        }
+        winInVec++;
+
+        // 10 Fenster voll -> Mittelwert bilden -> nächster Vektor
+        if (winInVec >= windowsPerVector) {
+          for (int i = 0; i < featN; i++) {
+            vec[currentVec][i] /= (float)windowsPerVector;
+          }
+          currentVec++;
+          winInVec = 0;
+        }
+      }
+      fx.resetWindow();
+    }
+  }
+
+  // Ausgabe: NUR 20 Vektoren als CSV
+  Serial.println("=== NOLOAD_FEATURES_BEGIN ===");
+  Serial.println("idx,I_rms_A,I_max_A,Amp_50Hz,Amp_100Hz,Amp_150Hz,Amp_200Hz,Amp_250Hz");
+
+  for (int v = 0; v < currentVec; v++) {
+    Serial.print(v); Serial.print(",");
+    for (int i = 0; i < featN; i++) {
+      Serial.print(vec[v][i], 6);
+      if (i < featN - 1) Serial.print(",");
+    }
+    Serial.println();
+  }
+
+  Serial.println("=== NOLOAD_FEATURES_END ===");
+}
+
 int CurrentSensor::measurePredictPause(uint32_t measure_ms, uint32_t pause_ms) {
 
   const unsigned long Ts_us = sampleDelay;

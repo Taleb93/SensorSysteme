@@ -19,5 +19,6 @@ public:
     void recordSamples_VC();
     int measurePredictPause(uint32_t measure_ms, uint32_t pause_ms);
     void captureAndPrintOneWindow20ms();
+    void recordFeatureVectors_4s_20vec();
    
 };
