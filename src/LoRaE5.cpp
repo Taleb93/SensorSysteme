@@ -236,3 +236,58 @@ void LoRaE5::SendDetectedDevice(String Device) {
         Serial.println("⚠️ Keine gültige Temperaturantwort erhalten!");
     }
 }
+void LoRaE5::SendDetectedDevice_kompakt(const String &Device) {
+
+    // (optional) kompaktes Format statt langer deutscher Satz -> spart Bytes
+    // z.B. "DEV:<name>"
+    String payload;
+    payload.reserve(4 + Device.length());  // "DEV:" = 4
+    payload = "DEV:";
+    payload += Device;
+
+    // Sicherheitsmaßnahme: in EU868 worst-case DR0 nur 51 Bytes Payload sicher
+    // (wenn ADR aktiv ist, kann DR runtergehen)
+    const size_t MAX_PAYLOAD = 51;
+    if (payload.length() > MAX_PAYLOAD) {
+        payload.remove(MAX_PAYLOAD);  // hart abschneiden
+    }
+
+    Serial.print("📏 Zum Server wird erkannt: ");
+    Serial.println(Device);
+    Serial.print("📦 Payload (Bytes): ");
+    Serial.println(payload.length());
+
+    // AT+MSG="..."
+    String sendCmd;
+    sendCmd.reserve(8 + payload.length() + 1); // AT+MSG="" -> ca. 8 + payload + "
+    sendCmd = "AT+MSG=\"";
+    sendCmd += payload;
+    sendCmd += "\"";
+
+    Serial.print("📤 Sende an TTN: ");
+    Serial.println(sendCmd);
+
+    // Befehl senden
+    String sendResp = sendCommand(sendCmd, 10000);
+    Serial.print("LoRa → ");
+    Serial.println(sendResp);
+
+    // Ergebnis auswerten
+    if (sendResp.indexOf("Done") != -1) {
+        Serial.println("✅ Nachricht erfolgreich gesendet!");
+        this->Done = true;
+        this->busy = false;
+    }
+    else if (sendResp.indexOf("busy") != -1) {
+        Serial.println("⚠️ Modem war beschäftigt, später erneut senden!");
+        this->Done = false;
+        this->busy = true;
+    }
+    else {
+        Serial.println("⚠️ Nachricht wurde nicht bestätigt!");
+        this->Done = false;
+        this->busy = false;
+    }
+
+    delay(5000);  // optional: kannst du später reduzieren/entfernen
+}

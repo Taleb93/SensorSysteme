@@ -21,7 +21,7 @@ Eloquent::TinyML::TfLite<
 > ml;
 
 const char* LABELS[NUMBER_OF_OUTPUTS] = {
-  "Lötstation",
+  "Loetstation",
   "Laptopnetzteil",
   "Ventilator"
 };
@@ -70,12 +70,14 @@ void setup() {
 }
 
 void loop() {
-  // 2s messen -> 1 Ergebnis -> 3s Pause -> wiederholen
   
- int pred = cs.measurePredictPause(2000, 3000);
-  Serial.print("✅ Predicted device: ");
-  Serial.println(LABELS[pred]);
-  sensor.SendDetectedDevice(LABELS[pred]);
+  // 2s messen -> 1 Ergebnis -> 3s Pause -> wiederholen
+  cs.recordSamples_VC();
+  // int pred = cs.measurePredictPause(2000, 3000);
+  // Serial.print("✅ Predicted device: ");
+  // Serial.println(LABELS[pred]);
+  // sensor.SendDetectedDevice_kompakt(LABELS[pred]);
+
   // Wenn du Labels statt Zahl willst: du kannst in CurrentSensor
   // best zurückgeben oder dort Serial.println(LABELS[best]) machen.
 }
