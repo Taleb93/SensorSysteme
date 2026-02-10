@@ -1,12 +1,9 @@
 // feature.cpp
-
 #include "feature.hh"                                 // FeatureExtractor
 #include <math.h>                                     // Mathe-Funktionen
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846                   // Pi-Konstante
 #endif
-
 FeatureExtractor::FeatureExtractor(float period_s) : PERIOD_S(period_s) {} // Fensterzeit setzen
 
 void FeatureExtractor::begin(uint32_t sampleDelayUs, size_t maxBuffer) {

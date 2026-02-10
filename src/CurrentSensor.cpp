@@ -59,41 +59,32 @@ void CurrentSensor::recordSamples_VC() {
         Serial.println(c_buf[i], 4); // print current
     }
 }
-
+// CurrentSensor.cpp
 void CurrentSensor::recordFeatureVectors_20vec() {
-
   const unsigned long Ts_us = sampleDelay;           // Sample-Periode
   unsigned long next_t = micros();                   // nächste Sample-Zeit
-
   FeatureExtractor fx;                               // Feature-Objekt
   fx.begin(Ts_us);                                   // Feature-Init
-
   // 4s / 20ms = 200 Fenster                         // Fenster-Rechnung
   // 200 Fenster / 20 Vektoren = 10 Fenster/Vektor   // Vektor-Rechnung
   const int windowsPerVector = 10;                   // Fenster pro Vektor
   const int outVectors = 20;                         // Anzahl Vektoren
   const int featN = 7;                               // Feature-Anzahl
-
   float vec[outVectors][featN];                      // Vektor-Puffer
   for (int v = 0; v < outVectors; v++)               // init v
     for (int i = 0; i < featN; i++)                  // init i
       vec[v][i] = 0.0f;                              // auf 0 setzen
-
   int currentVec = 0;                                // aktueller Vektor
   int winInVec = 0;                                  // Fenster-Zähler
-
   unsigned long t_end = micros() + 4000UL * 1000UL;   // Messdauer 4s
 
   while ((long)(micros() - t_end) < 0 && currentVec < outVectors) { // Loop bis fertig
 
     while ((long)(micros() - next_t) < 0) {}          // busy-wait Timing
     next_t += Ts_us;                                  // nächstes Sample
-
     float v = readVoltageOnce();                      // Spannung lesen
     float c = (v - offsetVoltage) / sensitivity;      // Strom berechnen
-
     fx.addSample(c);                                  // Sample hinzufügen
-
     if (fx.windowReady()) {                           // Fenster voll?
       float feats[featN];                             // Feature-Puffer
       if (fx.computeFeatures(feats)) {                // Features berechnen

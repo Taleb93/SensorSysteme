@@ -4,7 +4,7 @@ Dieses Repository enthält ein Embedded-System zur **Geräteerkennung anhand von
 Ein Stromsensor liefert ein analoges Signal (mit Offset), das vom **NUCLEO-F303RE** per ADC abgetastet wird. Aus den Messdaten werden Merkmale berechnet und ein **TinyML-Modell (TensorFlow Lite Micro)** klassifiziert das angeschlossene Gerät. Das Erkennungsergebnis wird anschließend per **LoRaWAN (LoRa-E5 via UART)** als kompakte Nachricht an die Cloud übertragen.
 
 ## System-Übersicht
-
+![Systemübersicht](image.png)
 **Pipeline (Echtbetrieb):**
 1. **Strommessung (ADC):** Analogsignal mit Offset → Nucleo ADC (A0)
 2. **Sampling:** ~3000 Hz (Delay ~333 µs)

@@ -180,6 +180,7 @@ void LoRaE5::control_ledLink(uint32_t sendLed,uint32_t busyLed,uint32_t faildLed
          digitalWrite(faildLed,LOW);
          }
 }
+
 void LoRaE5::SendDetectedDevice(const String &Device) {
     String payload;                                     // Payload String
     payload.reserve(4 + Device.length());               // Speicher sparen
