@@ -1,7 +1,6 @@
 #include "LoRaE5.hh"
 
 LoRaE5::LoRaE5(HardwareSerial &serialPort) : serial(serialPort), joined(false) {}
-
 void LoRaE5::begin(unsigned long baud) {
     serial.begin(baud);
     delay(1500);
@@ -9,7 +8,6 @@ void LoRaE5::begin(unsigned long baud) {
 void LoRaE5::clearBuffer() {
     while (serial.available()) serial.read();
 }
-
 String LoRaE5::sendCommand(const String &cmd, unsigned long timeout) {
     clearBuffer();
     serial.println(cmd);
@@ -30,7 +28,6 @@ String LoRaE5::sendCommand(const String &cmd, unsigned long timeout) {
     response.trim();
     return response;
 }
-
 bool LoRaE5::joinNetwork() {
     Serial.println(" Versuche, LoRaWAN-Netzwerk zu joinen...");
     while (!joined) {
@@ -183,16 +180,11 @@ void LoRaE5::control_ledLink(uint32_t sendLed,uint32_t busyLed,uint32_t faildLed
          digitalWrite(faildLed,LOW);
          }
 }
-
 void LoRaE5::SendDetectedDevice(const String &Device) {
-
-    // (optional) kompaktes Format statt langer deutscher Satz -> spart Bytes
-    // z.B. "DEV:<name>"
     String payload;
     payload.reserve(4 + Device.length());  // "DEV:" = 4
     payload = "DEV:";
     payload += Device;
-
     // Sicherheitsmaßnahme: in EU868 worst-case DR0 nur 51 Bytes Payload sicher
     // (wenn ADR aktiv ist, kann DR runtergehen)
     const size_t MAX_PAYLOAD = 51;
@@ -200,9 +192,9 @@ void LoRaE5::SendDetectedDevice(const String &Device) {
         payload.remove(MAX_PAYLOAD);  // hart abschneiden
     }
 
-    Serial.print("📏 Zum Server wird erkannt: ");
+    Serial.print(" Zum Server wird erkannt: ");
     Serial.println(Device);
-    Serial.print("📦 Payload (Bytes): ");
+    Serial.print(" Payload (Bytes): ");
     Serial.println(payload.length());
 
     // AT+MSG="..."
@@ -212,9 +204,8 @@ void LoRaE5::SendDetectedDevice(const String &Device) {
     sendCmd += payload;
     sendCmd += "\"";
 
-    Serial.print("📤 Sende an TTN: ");
+    Serial.print(" Sende an TTN: ");
     Serial.println(sendCmd);
-
     // Befehl senden
     String sendResp = sendCommand(sendCmd, 10000);
     Serial.print("LoRa → ");
@@ -222,20 +213,14 @@ void LoRaE5::SendDetectedDevice(const String &Device) {
 
     // Ergebnis auswerten
     if (sendResp.indexOf("Done") != -1) {
-        Serial.println("✅ Nachricht erfolgreich gesendet!");
-        this->Done = true;
-        this->busy = false;
+        Serial.println(" Nachricht erfolgreich gesendet!");
     }
     else if (sendResp.indexOf("busy") != -1) {
-        Serial.println("⚠️ Modem war beschäftigt, später erneut senden!");
-        this->Done = false;
-        this->busy = true;
+        Serial.println(" Modem war beschäftigt, später erneut senden!");
     }
     else {
-        Serial.println("⚠️ Nachricht wurde nicht bestätigt!");
-        this->Done = false;
-        this->busy = false;
+        Serial.println(" Nachricht wurde nicht bestätigt!");
     }
 
-    delay(5000);  // optional: kannst du später reduzieren/entfernen
+    delay(5000);
 }

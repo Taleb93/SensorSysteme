@@ -12,7 +12,8 @@
 #define TENSOR_ARENA_SIZE  8192
 
 HardwareSerial LoRaSerial(USART3);
-LoRaE5 sensor(LoRaSerial);
+LoRaE5 lora(LoRaSerial);
+CurrentSensor sensor;
 
 Eloquent::TinyML::TfLite<
   NUMBER_OF_INPUTS,
@@ -42,13 +43,11 @@ int predictClass(float *x) {
 }
 
 
-CurrentSensor cs;
-
 void setup() {
   Serial.begin(9600);
  
-  sensor.begin(9600);
-  sensor.joinNetwork();
+  lora.begin(9600);
+  lora.joinNetwork();
     
  delay(1500);
   Serial.println();
@@ -61,14 +60,14 @@ void setup() {
     while (true) delay(1000);
   }
   Serial.println("Model loaded");
-  cs.begin(A0, 1.65f, 3.3f, 1023);
+  sensor.begin(A0, 1.65f, 3.3f, 1023);
   Serial.println("Sensor ready");
 }
 
 void loop() {
-   int pred = cs.measurePredictPause(2000, 3000);
+   int pred = sensor.measurePredictPause(2000, 3000);
    Serial.print("Predicted device: ");
    Serial.println(LABELS[pred]);
-   sensor.SendDetectedDevice_kompakt(LABELS[pred]);
+   lora.SendDetectedDevice(LABELS[pred]);
 
 }

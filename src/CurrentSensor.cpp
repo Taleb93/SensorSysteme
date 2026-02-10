@@ -1,8 +1,6 @@
 #include "CurrentSensor.hh"
 #include "feature.hh"
-#include "norm_params.hh"
 
-extern int predictClass(float *x);
  
 #define DEFAULT_SAMPLES 240
 #define DEFAULT_DELAY_US 333 // ≈ 3 kHz Abtastrate
@@ -66,7 +64,7 @@ void CurrentSensor::recordFeatureVectors_4s_20vec() {
   const unsigned long Ts_us = sampleDelay;
   unsigned long next_t = micros();
 
-  FeatureExtractor20ms fx;
+  FeatureExtractor fx;
   fx.begin(Ts_us);
 
   // 4s / 20ms = 200 Fenster
@@ -133,13 +131,15 @@ void CurrentSensor::recordFeatureVectors_4s_20vec() {
 
   Serial.println("=== NOLOAD_FEATURES_END ===");
 }
+#include "norm_params.hh"
 
+extern int predictClass(float *x);
 int CurrentSensor::measurePredictPause(uint32_t measure_ms, uint32_t pause_ms) {
 
   const unsigned long Ts_us = sampleDelay;
   unsigned long next_t = micros();
 
-  FeatureExtractor20ms fx;
+  FeatureExtractor fx;
   fx.begin(Ts_us);
 
   int votes[NUM_CLASSES] = {0};
