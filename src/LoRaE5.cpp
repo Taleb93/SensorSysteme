@@ -1,51 +1,51 @@
-#include "LoRaE5.hh"
-
-LoRaE5::LoRaE5(HardwareSerial &serialPort) : serial(serialPort), joined(false) {}
+// LoRaE5.cpp
+#include "LoRaE5.hh"                                   // LoRaE5 Klasse
+LoRaE5::LoRaE5(HardwareSerial &serialPort)
+  : serial(serialPort), joined(false) {}               // UART + Status
 void LoRaE5::begin(unsigned long baud) {
-    serial.begin(baud);
-    delay(1500);
+    serial.begin(baud);                                // UART starten
+    delay(1500);                                       // Modul booten
 }
 void LoRaE5::clearBuffer() {
-    while (serial.available()) serial.read();
+    while (serial.available()) serial.read();          // UART leeren
 }
 String LoRaE5::sendCommand(const String &cmd, unsigned long timeout) {
-    clearBuffer();
-    serial.println(cmd);
-    unsigned long start = millis();
-    String response = "";
+    clearBuffer();                                     // alte Daten weg
+    serial.println(cmd);                               // AT senden
+    unsigned long start = millis();                    // Timeout-Start
+    String response = "";                              // Antwort sammeln
 
-    while (millis() - start < timeout) {
-        while (serial.available()) {
-            char c = serial.read();
-            response += c;
-            // Falls das Modul "busy" oder "Done" meldet, können wir abbrechen
+    while (millis() - start < timeout) {               // bis Timeout
+        while (serial.available()) {                   // Daten da?
+            char c = serial.read();                    // Byte lesen
+            response += c;                             // Antwort bauen
+
             if (response.indexOf("Done") != -1 || response.indexOf("busy") != -1) {
-                response.trim();
-                return response;
+                response.trim();                       // Whitespace weg
+                return response;                       // früh zurück
             }
         }
     }
-    response.trim();
-    return response;
+    response.trim();                                   // Whitespace weg
+    return response;                                   // Antwort zurück
 }
 bool LoRaE5::joinNetwork() {
-    Serial.println(" Versuche, LoRaWAN-Netzwerk zu joinen...");
-    while (!joined) {
-        String resp = sendCommand("AT+JOIN", 10000);
-        Serial.print("LoRa → ");
-        Serial.println(resp);
+    Serial.println(" Versuche, LoRaWAN-Netzwerk zu joinen..."); // Status
+    while (!joined) {                                  // bis verbunden
+        String resp = sendCommand("AT+JOIN", 10000);    // Join-Befehl
+        Serial.print("LoRa → ");                        // Debug prefix
+        Serial.println(resp);                           // Antwort anzeigen
 
         if (resp.indexOf("Network joined") != -1 || resp.indexOf("Joined already") != -1) {
-            Serial.println("✅ Erfolgreich mit Netzwerk verbunden!");
-            joined = true;
+            Serial.println(" Erfolgreich mit Netzwerk verbunden!"); // Erfolg
+            joined = true;                              // Flag setzen
         } else {
-            Serial.println("Join fehlgeschlagen, neuer Versuch in 15 Sekunden...");
-            delay(15000);
+            Serial.println("Join fehlgeschlagen, neuer Versuch in 15 Sekunden..."); // Retry
+            delay(15000);                               // Join-Delay
         }
     }
-    return joined;
+    return joined;                                      // Status zurück
 }
-
 void LoRaE5::sendTestMessage() {
     String cmd = "AT+MSG=\"Test Network\",UNCNF";
     Serial.print("Sende: ");
@@ -181,46 +181,43 @@ void LoRaE5::control_ledLink(uint32_t sendLed,uint32_t busyLed,uint32_t faildLed
          }
 }
 void LoRaE5::SendDetectedDevice(const String &Device) {
-    String payload;
-    payload.reserve(4 + Device.length());  // "DEV:" = 4
-    payload = "DEV:";
-    payload += Device;
-    // Sicherheitsmaßnahme: in EU868 worst-case DR0 nur 51 Bytes Payload sicher
-    // (wenn ADR aktiv ist, kann DR runtergehen)
-    const size_t MAX_PAYLOAD = 51;
+    String payload;                                     // Payload String
+    payload.reserve(4 + Device.length());               // Speicher sparen
+    payload = "DEV:";                                   // Prefix
+    payload += Device;                                  // Gerätename
+
+    const size_t MAX_PAYLOAD = 51;                      // DR0 sicher
     if (payload.length() > MAX_PAYLOAD) {
-        payload.remove(MAX_PAYLOAD);  // hart abschneiden
+        payload.remove(MAX_PAYLOAD);                    // hart kürzen
     }
 
-    Serial.print(" Zum Server wird erkannt: ");
-    Serial.println(Device);
-    Serial.print(" Payload (Bytes): ");
-    Serial.println(payload.length());
+    Serial.print(" Zum Server wird erkannt: ");         // Debug Text
+    Serial.println(Device);                             // Gerät ausgeben
+    Serial.print(" Payload (Bytes): ");                 // Länge zeigen
+    Serial.println(payload.length());                   // Byte-Anzahl
 
-    // AT+MSG="..."
-    String sendCmd;
-    sendCmd.reserve(8 + payload.length() + 1); // AT+MSG="" -> ca. 8 + payload + "
-    sendCmd = "AT+MSG=\"";
-    sendCmd += payload;
-    sendCmd += "\"";
+    String sendCmd;                                     // AT Kommando
+    sendCmd.reserve(8 + payload.length() + 1);          // Speicher sparen
+    sendCmd = "AT+MSG=\"";                              // MSG Start
+    sendCmd += payload;                                 // Payload rein
+    sendCmd += "\"";                                    // MSG Ende
 
-    Serial.print(" Sende an TTN: ");
-    Serial.println(sendCmd);
-    // Befehl senden
-    String sendResp = sendCommand(sendCmd, 10000);
-    Serial.print("LoRa → ");
-    Serial.println(sendResp);
+    Serial.print(" Sende an TTN: ");                    // Debug Text
+    Serial.println(sendCmd);                            // Kommando zeigen
 
-    // Ergebnis auswerten
-    if (sendResp.indexOf("Done") != -1) {
-        Serial.println(" Nachricht erfolgreich gesendet!");
+    String sendResp = sendCommand(sendCmd, 10000);       // senden + warten
+    Serial.print("LoRa → ");                             // Debug prefix
+    Serial.println(sendResp);                            // Antwort zeigen
+
+    if (sendResp.indexOf("Done") != -1) {               // Erfolg?
+        Serial.println(" Nachricht erfolgreich gesendet!"); // OK
     }
-    else if (sendResp.indexOf("busy") != -1) {
-        Serial.println(" Modem war beschäftigt, später erneut senden!");
+    else if (sendResp.indexOf("busy") != -1) {          // busy?
+        Serial.println(" Modem war beschäftigt, später erneut senden!"); // Retry
     }
     else {
-        Serial.println(" Nachricht wurde nicht bestätigt!");
+        Serial.println(" Nachricht wurde nicht bestätigt!"); // unklar
     }
 
-    delay(5000);
+    delay(5000);                                        // Pause nach Send
 }

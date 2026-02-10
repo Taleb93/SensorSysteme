@@ -43,3 +43,8 @@ Ein Stromsensor liefert ein analoges Signal (mit Offset), das vom **NUCLEO-F303R
 - VS Code + PlatformIO Extension
 - USB-Treiber/STM32 ST-Link (über Nucleo integriert)
 
+## Build & Ausführen
+ie Anwendung startet in:
+- `src/main.cpp`
+In VS Code (PlatformIO) ausführen:
+'Upload'

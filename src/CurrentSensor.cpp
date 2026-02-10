@@ -1,118 +1,117 @@
 #include "CurrentSensor.hh"
 #include "feature.hh"
 
- 
 #define DEFAULT_SAMPLES 240
-#define DEFAULT_DELAY_US 333 // ≈ 3 kHz Abtastrate
+#define DEFAULT_DELAY_US 333 // ~3 kHz Sampling
 static const int NUM_CLASSES = 4;
+
 CurrentSensor::CurrentSensor() {
-    samples = DEFAULT_SAMPLES;
-    sampleDelay = DEFAULT_DELAY_US;
-    sensitivity = 0.4;
+    samples = DEFAULT_SAMPLES;      // default sample count
+    sampleDelay = DEFAULT_DELAY_US; // sampling period (µs)
+    sensitivity = 0.4;              // sensor gain factor
 }
 
 void CurrentSensor::begin(int pin, float offset, float vref, int adcRes) {
-    sensorPin = pin;
-    offsetVoltage = offset;
-    vRef = vref;
-    adcResolution = adcRes;
-    analogReadResolution(10);
-    Serial.println("🔌 CurrentSensor initialisiert...");
+    sensorPin = pin;           // ADC input pin
+    offsetVoltage = offset;    // DC offset level
+    vRef = vref;               // ADC reference voltage
+    adcResolution = adcRes;    // ADC max value
+    analogReadResolution(10);  // set ADC bits
+    Serial.println("🔌 CurrentSensor initialisiert..."); // status print
 }
 
 float CurrentSensor::readVoltageOnce() {
-    int raw = analogRead(sensorPin);
-    float voltage = (raw / (float)adcResolution) * vRef;
-    return voltage;
+    int raw = analogRead(sensorPin);                 // read ADC raw
+    float voltage = (raw / (float)adcResolution) * vRef; // raw→voltage
+    return voltage;                                  // return voltage
 }
+
 void CurrentSensor::recordSamples_VC() {
-  static unsigned long t_buf[DEFAULT_SAMPLES];
-    static float v_buf[DEFAULT_SAMPLES];
-    static float c_buf[DEFAULT_SAMPLES];
+    static unsigned long t_buf[DEFAULT_SAMPLES]; // time buffer
+    static float v_buf[DEFAULT_SAMPLES];         // voltage buffer
+    static float c_buf[DEFAULT_SAMPLES];         // current buffer
 
-    const unsigned long Ts_us = sampleDelay; // gewünschte Periode
-
-    unsigned long next_t = micros();  // Startzeit
+    const unsigned long Ts_us = sampleDelay; // target period
+    unsigned long next_t = micros();         // next sample time
 
     for (unsigned int i = 0; i < samples; i++) {
 
-        // Warte bis zum geplanten Zeitpunkt
         while ((long)(micros() - next_t) < 0) {
-            // busy-wait
+            // busy-wait timing
         }
 
-        unsigned long t = micros();
-        float v = readVoltageOnce();
-        float c = (v - offsetVoltage) / sensitivity;
+        unsigned long t = micros();                 // timestamp
+        float v = readVoltageOnce();                // sample voltage
+        float c = (v - offsetVoltage) / sensitivity; // voltage→current
 
-        t_buf[i] = t;
-        v_buf[i] = v;
-        c_buf[i] = c;
+        t_buf[i] = t; // store time
+        v_buf[i] = v; // store voltage
+        c_buf[i] = c; // store current
 
-        next_t += Ts_us;  // nächstes Sample planen
+        next_t += Ts_us; // schedule next sample
     }
+
     for (unsigned int i = 0; i < samples; i++) {
-        Serial.print(t_buf[i]);
+        Serial.print(t_buf[i]);     // print time
         Serial.print("\t");
-        Serial.print(v_buf[i], 4);
+        Serial.print(v_buf[i], 4);  // print voltage
         Serial.print("\t");
-        Serial.println(c_buf[i], 4);
+        Serial.println(c_buf[i], 4); // print current
     }
 }
-void CurrentSensor::recordFeatureVectors_4s_20vec() {
 
-  const unsigned long Ts_us = sampleDelay;
-  unsigned long next_t = micros();
+void CurrentSensor::recordFeatureVectors_20vec() {
 
-  FeatureExtractor fx;
-  fx.begin(Ts_us);
+  const unsigned long Ts_us = sampleDelay;           // Sample-Periode
+  unsigned long next_t = micros();                   // nächste Sample-Zeit
 
-  // 4s / 20ms = 200 Fenster
-  // 200 Fenster / 20 Vektoren = 10 Fenster pro Vektor
-  const int windowsPerVector = 10;
-  const int outVectors = 20;
-  const int featN = 7;
+  FeatureExtractor fx;                               // Feature-Objekt
+  fx.begin(Ts_us);                                   // Feature-Init
 
-  float vec[outVectors][featN];
-  for (int v = 0; v < outVectors; v++)
-    for (int i = 0; i < featN; i++)
-      vec[v][i] = 0.0f;
+  // 4s / 20ms = 200 Fenster                         // Fenster-Rechnung
+  // 200 Fenster / 20 Vektoren = 10 Fenster/Vektor   // Vektor-Rechnung
+  const int windowsPerVector = 10;                   // Fenster pro Vektor
+  const int outVectors = 20;                         // Anzahl Vektoren
+  const int featN = 7;                               // Feature-Anzahl
 
-  int currentVec = 0;
-  int winInVec = 0;
+  float vec[outVectors][featN];                      // Vektor-Puffer
+  for (int v = 0; v < outVectors; v++)               // init v
+    for (int i = 0; i < featN; i++)                  // init i
+      vec[v][i] = 0.0f;                              // auf 0 setzen
 
-  unsigned long t_end = micros() + 4000UL * 1000UL;
+  int currentVec = 0;                                // aktueller Vektor
+  int winInVec = 0;                                  // Fenster-Zähler
 
-  while ((long)(micros() - t_end) < 0 && currentVec < outVectors) {
+  unsigned long t_end = micros() + 4000UL * 1000UL;   // Messdauer 4s
 
-    while ((long)(micros() - next_t) < 0) {}
-    next_t += Ts_us;
+  while ((long)(micros() - t_end) < 0 && currentVec < outVectors) { // Loop bis fertig
 
-    float v = readVoltageOnce();
-    float c = (v - offsetVoltage) / sensitivity;
+    while ((long)(micros() - next_t) < 0) {}          // busy-wait Timing
+    next_t += Ts_us;                                  // nächstes Sample
 
-    fx.addSample(c);
+    float v = readVoltageOnce();                      // Spannung lesen
+    float c = (v - offsetVoltage) / sensitivity;      // Strom berechnen
 
-    if (fx.windowReady()) {
-      float feats[featN];
-      if (fx.computeFeatures(feats)) {
+    fx.addSample(c);                                  // Sample hinzufügen
 
-        // Features aufsummieren
-        for (int i = 0; i < featN; i++) {
-          vec[currentVec][i] += feats[i];
+    if (fx.windowReady()) {                           // Fenster voll?
+      float feats[featN];                             // Feature-Puffer
+      if (fx.computeFeatures(feats)) {                // Features berechnen
+
+        for (int i = 0; i < featN; i++) {             // Features aufsummieren
+          vec[currentVec][i] += feats[i];             // Summe pro Feature
         }
-        winInVec++;
+        winInVec++;                                   // Fenster zählen
 
-        // 10 Fenster voll -> Mittelwert bilden -> nächster Vektor
-        if (winInVec >= windowsPerVector) {
-          for (int i = 0; i < featN; i++) {
-            vec[currentVec][i] /= (float)windowsPerVector;
+        if (winInVec >= windowsPerVector) {           // 10 Fenster erreicht?
+          for (int i = 0; i < featN; i++) {           // Mittelwert bilden
+            vec[currentVec][i] /= (float)windowsPerVector; // durch 10 teilen
           }
-          currentVec++;
-          winInVec = 0;
+          currentVec++;                               // nächster Vektor
+          winInVec = 0;                               // Reset Zähler
         }
       }
-      fx.resetWindow();
+      fx.resetWindow();                               // Fenster reset
     }
   }
 
@@ -133,75 +132,74 @@ void CurrentSensor::recordFeatureVectors_4s_20vec() {
 }
 #include "norm_params.hh"
 
-extern int predictClass(float *x);
+
+// CurrentSensor.cpp
+
+extern int predictClass(float *x);                  // ML-Funktion extern
+
 int CurrentSensor::measurePredictPause(uint32_t measure_ms, uint32_t pause_ms) {
 
-  const unsigned long Ts_us = sampleDelay;
-  unsigned long next_t = micros();
+  const unsigned long Ts_us = sampleDelay;          // Sample-Periode
+  unsigned long next_t = micros();                  // nächste Sample-Zeit
 
-  FeatureExtractor fx;
-  fx.begin(Ts_us);
+  FeatureExtractor fx;                              // Feature-Objekt
+  fx.begin(Ts_us);                                  // init mit Ts
 
-  int votes[NUM_CLASSES] = {0};
+  int votes[NUM_CLASSES] = {0};                     // Voting-Zähler
 
-  // Features über die Messung mitteln
-  float featSum[7] = {0};
-  int featCount = 0;
+  float featSum[7] = {0};                           // Feature-Summe
+  int featCount = 0;                                // Fenster-Anzahl
 
-  unsigned long t_end = micros() + (unsigned long)measure_ms * 1000UL;
+  unsigned long t_end = micros() + (unsigned long)measure_ms * 1000UL; // Mess-Ende
 
-  while ((long)(micros() - t_end) < 0) {
+  while ((long)(micros() - t_end) < 0) {            // messen bis Ende
 
-    while ((long)(micros() - next_t) < 0) {}
-    next_t += Ts_us;
+    while ((long)(micros() - next_t) < 0) {}        // busy-wait Timing
+    next_t += Ts_us;                                // nächstes Sample planen
 
-    float v = readVoltageOnce();
-    float c = (v - offsetVoltage) / sensitivity;
+    float v = readVoltageOnce();                    // Spannung lesen
+    float c = (v - offsetVoltage) / sensitivity;    // Strom berechnen
 
-    fx.addSample(c);
+    fx.addSample(c);                                // Sample ins Fenster
 
-    if (fx.windowReady()) {
-      float feats[7];
-      if (fx.computeFeatures(feats)) {
+    if (fx.windowReady()) {                         // Fenster voll?
+      float feats[7];                               // Feature-Puffer
+      if (fx.computeFeatures(feats)) {              // Features berechnen
 
-        // 1) Features sammeln (roh)
-        for (int i = 0; i < 7; i++) featSum[i] += feats[i];
-        featCount++;
+        for (int i = 0; i < 7; i++) featSum[i] += feats[i]; // Features aufsummieren
+        featCount++;                                 // Fenster zählen
 
-        // 2) Predict (wie bisher) -> Voting
-        float x[7];
+        float x[7];                                  // Norm-Input
         for (int i = 0; i < 7; i++) {
-          x[i] = (feats[i] - NORM_MEAN[i]) / NORM_STD[i];
+          x[i] = (feats[i] - NORM_MEAN[i]) / NORM_STD[i];   // z-Score Norm
         }
-        int pred = predictClass(x);
-        if (pred >= 0 && pred < NUM_CLASSES) votes[pred]++;
+        int pred = predictClass(x);                  // Klasse vorhersagen
+        if (pred >= 0 && pred < NUM_CLASSES) votes[pred]++; // Vote zählen
       }
-      fx.resetWindow();
+      fx.resetWindow();                              // Fenster zurücksetzen
     }
   }
 
-  // Voting Ergebnis
-  int best = 0;
-  for (int i = 1; i < NUM_CLASSES; i++)
+  int best = 0;                                      // beste Klasse
+  for (int i = 1; i < NUM_CLASSES; i++)              // Mehrheitswahl
     if (votes[i] > votes[best]) best = i;
 
-  // ---- Feature-Vektor pro Messung ausgeben ----
-  Serial.println("---- Measurement features (avg over windows) ----");
-  if (featCount > 0) {
-    float avgFeat[7];
-    for (int i = 0; i < 7; i++) avgFeat[i] = featSum[i] / (float)featCount;
+  Serial.println("---- Measurement features (avg over windows) ----"); // Header
+  if (featCount > 0) {                              // Fenster vorhanden?
+    float avgFeat[7];                               // Mittelwert-Features
+    for (int i = 0; i < 7; i++) avgFeat[i] = featSum[i] / (float)featCount; // Mittelwert
 
-    Serial.print("I_rms_A=");   Serial.print(avgFeat[0], 6); Serial.print("\t");
-    Serial.print("I_max_A=");   Serial.print(avgFeat[1], 6); Serial.print("\t");
-    Serial.print("Amp_50Hz=");  Serial.print(avgFeat[2], 6); Serial.print("\t");
-    Serial.print("Amp_100Hz="); Serial.print(avgFeat[3], 6); Serial.print("\t");
-    Serial.print("Amp_150Hz="); Serial.print(avgFeat[4], 6); Serial.print("\t");
-    Serial.print("Amp_200Hz="); Serial.print(avgFeat[5], 6); Serial.print("\t");
-    Serial.print("Amp_250Hz="); Serial.println(avgFeat[6], 6);
+    Serial.print("I_rms_A=");   Serial.print(avgFeat[0], 6); Serial.print("\t");   // RMS
+    Serial.print("I_max_A=");   Serial.print(avgFeat[1], 6); Serial.print("\t");   // Peak
+    Serial.print("Amp_50Hz=");  Serial.print(avgFeat[2], 6); Serial.print("\t");   // 50 Hz
+    Serial.print("Amp_100Hz="); Serial.print(avgFeat[3], 6); Serial.print("\t");   // 100 Hz
+    Serial.print("Amp_150Hz="); Serial.print(avgFeat[4], 6); Serial.print("\t");   // 150 Hz
+    Serial.print("Amp_200Hz="); Serial.print(avgFeat[5], 6); Serial.print("\t");   // 200 Hz
+    Serial.print("Amp_250Hz="); Serial.println(avgFeat[6], 6);                     // 250 Hz
   } else {
-    Serial.println("No windows computed (featCount=0)");
+    Serial.println("No windows computed (featCount=0)");     // keine Fenster
   }
 
-  delay(pause_ms);
-  return best;
+  delay(pause_ms);                                 // Pause nach Messung
+  return best;                                     // Ergebnis zurückgeben
 }
